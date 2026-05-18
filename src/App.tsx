@@ -25,11 +25,21 @@ import { generateDataset, Dataset, NodeData, EdgeData } from './dataGenerator';
 // --- Types & Constants ---
 
 const CATEGORY_COLORS: Record<string, string> = {
-  A: '#3B82F6',
-  B: '#10B981',
-  C: '#F59E0B',
-  D: '#8B5CF6',
-  E: '#EF4444',
+  'Network Leader': '#3B82F6',   // Leader - Blue
+  'Lieutenant': '#10B981',       // 2nd command - Green
+  'Operative': '#F59E0B',        // Enforcer - Amber
+  'Financial Agent': '#8B5CF6',  // Money Mule - Purple
+  'Facilitator': '#EF4444',      // Broker - Red
+  'Unknown Actor': '#6B7280',    // Outlier - Gray
+};
+
+const PERSONA_LABELS: Record<string, string> = {
+  'Network Leader': 'Network Leader (Boss)',
+  'Lieutenant': 'Lieutenant (2nd-in-Command)',
+  'Operative': 'Operative (Enforcer)',
+  'Financial Agent': 'Financial Agent (Money Mule)',
+  'Facilitator': 'Facilitator (Broker)',
+  'Unknown Actor': 'Unknown Actor',
 };
 
 const LIGHT_BG = '#F9FAFB';
@@ -365,9 +375,9 @@ export default function App() {
       ? dataset.edges.filter(e => selectionInfo.highlightedEdges.has(`${e.source_id}--${e.target_id}`))
       : dataset.edges;
 
-    let csvContent = "data:text/csv;charset=utf-8,Type,ID/Source,Label/Target,X,Y,Z\n";
+    let csvContent = "data:text/csv;charset=utf-8,Type,ID/Source,Label/Target,Degree,X,Y,Z\n";
     activeNodes.forEach(n => {
-      csvContent += `Node,${n.id},${n.label},${n.x.toFixed(2)},${n.y.toFixed(2)},${n.z.toFixed(2)}\n`;
+      csvContent += `Node,${n.id},${n.label},${n.degree},${n.x.toFixed(2)},${n.y.toFixed(2)},${n.z.toFixed(2)}\n`;
     });
     activeEdges.forEach(e => {
       csvContent += `Edge,${e.source_id},${e.target_id},,,, \n`;
@@ -465,11 +475,14 @@ export default function App() {
           >
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white shadow-lg" style={{ backgroundColor: CATEGORY_COLORS[hoveredNode.label] }}>
-                {hoveredNode.label}
+                {hoveredNode.label[0]}
               </div>
               <div>
-                <h3 className="text-sm font-mono opacity-50 uppercase tracking-widest">Node ID</h3>
-                <p className="text-lg font-bold">{hoveredNode.id}</p>
+                <h3 className="text-sm font-mono opacity-50 uppercase tracking-widest">{hoveredNode.label}</h3>
+                <p className="text-lg font-black">{hoveredNode.id}</p>
+                <div className="mt-1 text-[10px] text-indigo-500 font-bold uppercase tracking-widest">
+                  Degree Centrality: {hoveredNode.degree}
+                </div>
                 <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
                   <div className="text-[10px] uppercase tracking-tighter opacity-50">X Position</div>
                   <div className="text-xs font-mono">{hoveredNode.x.toFixed(2)}</div>
@@ -487,9 +500,9 @@ export default function App() {
       {/* Header / Title */}
       <div className="fixed top-6 left-6 sm:top-8 sm:left-8 z-10 select-none">
         <h1 className="text-xl sm:text-3xl font-black tracking-tighter uppercase leading-none">
-          t-SNE <span className="text-transparent" style={{ WebkitTextStroke: '1px currentColor' }}>3D</span> Explorer
+          Network Analysis
         </h1>
-        <p className="mt-1 text-[8px] sm:text-xs font-mono opacity-60 uppercase tracking-[0.2em]">Experimental Visualisation v1.0</p>
+        <p className="mt-1 text-[8px] sm:text-xs font-mono opacity-60 uppercase tracking-[0.2em]">SNA Intelligence Suite v2.0</p>
       </div>
 
       {/* Corner Controls */}
@@ -539,34 +552,66 @@ export default function App() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -100, opacity: 0 }}
-            className="fixed bottom-6 left-6 sm:bottom-8 sm:left-8 p-3 sm:p-6 rounded-2xl sm:rounded-3xl border shadow-2xl backdrop-blur-lg z-10"
+            className="fixed bottom-6 left-6 sm:bottom-8 sm:left-8 p-3 sm:p-6 rounded-2xl sm:rounded-3xl border shadow-2xl backdrop-blur-lg z-10 max-h-[70vh] overflow-y-auto"
             style={{ 
               backgroundColor: theme === 'light' ? 'rgba(255,255,255,0.8)' : 'rgba(17,24,39,0.8)',
               borderColor: theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)'
             }}
           >
+            {/* Pattern Legend */}
             <div className="flex items-center gap-2 mb-2 sm:mb-4">
               <Layers size={14} className="opacity-50 sm:w-4 sm:h-4" />
-              <h2 className="text-[9px] sm:text-xs font-bold uppercase tracking-widest opacity-50">Cluster Legend</h2>
+              <h2 className="text-[9px] sm:text-xs font-bold uppercase tracking-widest opacity-50">Communication Patterns</h2>
             </div>
-            <div className="flex flex-col gap-1 sm:gap-2">
-              {Object.entries(CATEGORY_COLORS).map(([label, color]) => (
+            <div className="flex flex-col gap-1 sm:gap-2 mb-6">
+              {Object.entries(PERSONA_LABELS).map(([label, display]) => (
                 <button
                   key={label}
                   onClick={() => onClusterClick(label)}
                   className={`group flex items-center gap-2 sm:gap-4 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all ${selectedCluster === label ? 'bg-white shadow-md' : 'hover:bg-white/50'}`}
                   style={selectedCluster === label ? { color: '#000' } : {}}
                 >
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-bold text-white shadow-sm transition-transform group-hover:scale-110" style={{ backgroundColor: color }}>
-                    {label}
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-bold text-white shadow-sm transition-transform group-hover:scale-110" style={{ backgroundColor: CATEGORY_COLORS[label] }}>
+                    {label[0]}
                   </div>
-                  <span className="text-[10px] sm:text-sm font-medium tracking-tight">Cluster {label}</span>
+                  <span className="text-[10px] sm:text-sm font-medium tracking-tight">{display}</span>
                   {selectedCluster === label && <div className="ml-auto w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 animate-pulse" />}
                 </button>
               ))}
             </div>
+
+            {/* Key Influencers (Centrality) */}
+            <div className="flex items-center gap-2 mb-2 sm:mb-4 pt-4 border-t border-current border-opacity-10">
+              <span className="text-[14px]">⭐</span>
+              <h2 className="text-[9px] sm:text-xs font-bold uppercase tracking-widest opacity-50">Key Influencers (Degree)</h2>
+            </div>
+            <div className="flex flex-col gap-1 sm:gap-2">
+              {dataset.topInfluencers.map((inf) => (
+                <button
+                  key={inf.id}
+                  onClick={() => onNodeClick(inf.id)}
+                  className={`group flex items-center gap-2 sm:gap-4 p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all ${selectedNodeId === inf.id ? 'bg-white shadow-md' : 'hover:bg-white/50'}`}
+                  style={selectedNodeId === inf.id ? { color: '#000' } : {}}
+                >
+                  <div className="relative">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-bold text-white shadow-sm transition-transform group-hover:scale-110" style={{ backgroundColor: CATEGORY_COLORS[inf.label] }}>
+                      {inf.id.split('-')[1] || '!'}
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white flex items-center justify-center text-[6px] text-black font-bold">
+                      {inf.degree}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-start translate-y-[-1px]">
+                    <span className="text-[10px] sm:text-sm font-bold tracking-tight">{inf.id}</span>
+                    <span className="text-[8px] opacity-60 uppercase">{inf.label}</span>
+                  </div>
+                  {selectedNodeId === inf.id && <div className="ml-auto w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-indigo-500 animate-pulse" />}
+                </button>
+              ))}
+            </div>
+
             <div className="mt-4 sm:mt-6 pt-2 sm:pt-4 border-t border-current border-opacity-10 opacity-30 text-[7px] sm:text-[9px] uppercase tracking-tighter">
-              Click cluster to filter • Click node for relationship
+              Identify leaders • Map financial flows • Detect outliers
             </div>
           </motion.div>
         )}
