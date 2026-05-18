@@ -1,0 +1,6 @@
+{
+  "name": "t-SNE 3D Explorer",
+  "description": "An interactive 3D data visualization for exploring high-dimensional clusters and network relationships.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
