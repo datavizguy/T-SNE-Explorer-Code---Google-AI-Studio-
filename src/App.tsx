@@ -18,7 +18,8 @@ import {
   Eye, 
   EyeOff,
   Info,
-  Share2
+  Share2,
+  List
 } from 'lucide-react';
 import { generateDataset, Dataset, NodeData, EdgeData } from './dataGenerator';
 
@@ -535,7 +536,7 @@ export default function App() {
             borderColor: theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)'
           }}
         >
-          {showLegend ? <EyeOff size={18} className="sm:w-5 sm:h-5" /> : <Eye size={18} className="sm:w-5 sm:h-5" />}
+          <List size={18} className={`sm:w-5 sm:h-5 ${showLegend ? "text-indigo-500" : "opacity-30"}`} />
         </button>
         <button 
           onClick={downloadCSV}
