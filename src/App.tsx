@@ -265,7 +265,7 @@ const SceneRenderer = ({
         onPointerOut={() => onNodeHover(null)}
       >
         <sphereGeometry args={[1.2, 16, 16]} />
-        <meshStandardMaterial roughness={0.3} metalness={0.2} transparent opacity={0.9} />
+        <meshLambertMaterial />
       </instancedMesh>
 
       {showEdges && (
@@ -406,9 +406,9 @@ export default function App() {
         <PerspectiveCamera makeDefault position={[120, 120, 120]} fov={45} />
         <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
         
-        <ambientLight intensity={theme === 'light' ? 0.8 : 0.4} />
-        <pointLight position={[100, 100, 100]} intensity={1.5} />
-        <pointLight position={[-100, -100, -100]} intensity={0.5} />
+        <ambientLight intensity={theme === 'light' ? 1.0 : 0.7} />
+        <pointLight position={[100, 100, 100]} intensity={2.0} />
+        <pointLight position={[-100, -100, -100]} intensity={1.0} />
 
         {/* Bounding Cube */}
         <mesh>
@@ -503,7 +503,7 @@ export default function App() {
         <h1 className="text-xl sm:text-3xl font-black tracking-tighter uppercase leading-none">
           Network Analysis
         </h1>
-        <p className="mt-1 text-[8px] sm:text-xs font-mono opacity-60 uppercase tracking-[0.2em]">SNA Intelligence Suite v2.0</p>
+        <p className="mt-1 text-[8px] sm:text-xs font-mono opacity-60 uppercase tracking-[0.2em]">SNA Intelligence Suite v2.1</p>
       </div>
 
       {/* Corner Controls */}
